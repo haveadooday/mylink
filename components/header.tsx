@@ -51,7 +51,7 @@ export default function Header({
   const email = userProfile?.email || user?.email || "";
   const photoURL = userProfile?.photoURL || user?.photoURL || null;
   const username =
-    userProfile?.username ||
+    userProfile?.displayname ||
     user?.email?.split("@")[0] ||
     user?.uid?.slice(0, 8) ||
     "user";
