@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { dummyLinks } from "@/data/links";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, Code, Camera, Video, Mail, Share2, Plus } from "lucide-react";
@@ -16,30 +19,70 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
+const linkFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "타이틀을 입력해주세요.")
+    .max(20, "타이틀은 최대 20자까지 입력 가능합니다.")
+    .refine((val) => val.trim().length > 0, "타이틀을 입력해주세요."),
+  url: z
+    .string()
+    .min(1, "URL을 입력해주세요.")
+    .refine((val) => {
+      let testVal = val.trim();
+      if (!/^https?:\/\//i.test(testVal)) {
+        testVal = `https://${testVal}`;
+      }
+      try {
+        new URL(testVal);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }, "올바른 URL 형식을 입력해주세요 (예: naver.com 또는 https://...)"),
+});
+
+type LinkFormValues = z.infer<typeof linkFormSchema>;
+
 export default function Page() {
   const [links, setLinks] = useState(dummyLinks);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newUrl, setNewUrl] = useState("");
 
-  const handleAddLink = () => {
-    if (!newTitle.trim() || !newUrl.trim()) return;
-    
-    let finalUrl = newUrl.trim();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<LinkFormValues>({
+    resolver: zodResolver(linkFormSchema),
+    defaultValues: {
+      title: "",
+      url: "",
+    },
+  });
+
+  const onSubmit = (data: LinkFormValues) => {
+    let finalUrl = data.url.trim();
     if (!/^https?:\/\//i.test(finalUrl)) {
       finalUrl = `https://${finalUrl}`;
     }
 
     const newLink = {
       id: Date.now().toString(),
-      title: newTitle.trim(),
+      title: data.title.trim(),
       url: finalUrl,
     };
-    
+
     setLinks([newLink, ...links]);
-    setNewTitle("");
-    setNewUrl("");
+    reset();
     setIsAddDialogOpen(false);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsAddDialogOpen(open);
+    if (!open) {
+      reset();
+    }
   };
 
   return (
@@ -83,7 +126,7 @@ export default function Page() {
 
         {/* Add Link Button & Dialog */}
         <div className="flex justify-center w-full mt-2">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
               <Button className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm shadow-md rounded-xl py-6 text-base gap-2">
                 <Plus className="w-5 h-5" /> 새로운 링크 추가
@@ -93,44 +136,58 @@ export default function Page() {
               <DialogHeader>
                 <DialogTitle>새로운 링크 추가</DialogTitle>
               </DialogHeader>
-              <div className="flex flex-col gap-4 py-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="title" className="text-zinc-400">타이틀</Label>
-                  <Input
-                    id="title"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    placeholder="예: 내 포트폴리오"
-                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-zinc-600"
-                  />
+              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 py-4">
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="title" className="text-zinc-400">타이틀</Label>
+                    <Input
+                      id="title"
+                      {...register("title")}
+                      placeholder="예: 내 포트폴리오"
+                      className={`bg-zinc-800 text-white placeholder:text-zinc-500 focus-visible:ring-zinc-600 ${
+                        errors.title ? "border-red-500 focus-visible:ring-red-500" : "border-zinc-700"
+                      }`}
+                    />
+                    {errors.title && (
+                      <span className="text-xs text-red-400 font-medium mt-0.5">
+                        {errors.title.message}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="url" className="text-zinc-400">URL</Label>
+                    <Input
+                      id="url"
+                      {...register("url")}
+                      placeholder="https://example.com"
+                      className={`bg-zinc-800 text-white placeholder:text-zinc-500 focus-visible:ring-zinc-600 ${
+                        errors.url ? "border-red-500 focus-visible:ring-red-500" : "border-zinc-700"
+                      }`}
+                    />
+                    {errors.url && (
+                      <span className="text-xs text-red-400 font-medium mt-0.5">
+                        {errors.url.message}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="url" className="text-zinc-400">URL</Label>
-                  <Input
-                    id="url"
-                    value={newUrl}
-                    onChange={(e) => setNewUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:ring-zinc-600"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setIsAddDialogOpen(false)}
-                  className="text-zinc-400 hover:text-white hover:bg-zinc-800"
-                >
-                  취소
-                </Button>
-                <Button 
-                  onClick={handleAddLink}
-                  disabled={!newTitle.trim() || !newUrl.trim()}
-                  className="bg-white text-black hover:bg-zinc-200"
-                >
-                  추가하기
-                </Button>
-              </DialogFooter>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button 
+                    type="button"
+                    variant="ghost" 
+                    onClick={() => handleOpenChange(false)}
+                    className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                  >
+                    취소
+                  </Button>
+                  <Button 
+                    type="submit"
+                    className="bg-white text-black hover:bg-zinc-200"
+                  >
+                    추가하기
+                  </Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
