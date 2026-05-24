@@ -64,11 +64,11 @@ C:\Users\오태호\Desktop\학교\대학\바이브코딩\my-link\
 - **App Router 활용:** 서버 컴포넌트와 클라이언트 컴포넌트의 역할을 명확히 구분하여 작성합니다.
 - **유틸리티:** 클래스 병합 등 반복되는 로직은 `lib/utils.ts`의 `cn` 함수를 활용합니다.
 
-### Collaboration & Communication
-- **Language:** All plans, desks, and walkthroughs must be written in **English** (to optimize token usage).
-- **File References:** Always prefix file or directory names with `@` (e.g., `@package.json`, `@app/page.tsx`).
-- **Commit Messages:** Written in Korean, detailing the reasons and contents of changes (e.g., `feat: Firebase 기반 Google 소셜 로그인 기능 추가`).
-- **Validation:** Always run `npm run build` or `npm run lint` after development to ensure no errors.
+### 협업 및 의사소통 (Collaboration & Communication)
+- **언어 (Language):** 모든 계획(plans), 데스크(desks), 워크스루(walkthroughs) 및 답변은 항상 **한국어**로 작성해야 합니다.
+- **파일 참조:** 파일이나 디렉토리 이름 앞에는 항상 `@`를 붙입니다 (예: `@package.json`, `@app/page.tsx`).
+- **커밋 메시지:** 변경 이유와 내용을 자세히 설명하여 한국어로 작성합니다 (예: `feat: Firebase 기반 Google 소셜 로그인 기능 추가`). 사용자가 명시적으로 요청할 때만 커밋합니다.
+- **검증:** 개발 완료 후에는 항상 `npm run build` 또는 `npm run lint`를 실행하여 오류가 없는지 확인합니다.
 
 ## 5. 주요 기능 구현 참고 (PRD 요약)
 - **인증:** Firebase Auth 기반 구글 로그인.
