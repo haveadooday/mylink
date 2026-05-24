@@ -18,7 +18,6 @@ import {
   Trash2,
   X,
   Check,
-  Link2,
   MousePointerClick,
 } from "lucide-react";
 import {
@@ -34,6 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { type Link } from "@/lib/firebase/links";
 import Header from "@/components/header";
+import LandingHero from "@/app/_components/LandingHero";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useProfile";
 import { useLinks, useAddLink, useUpdateLink, useDeleteLink } from "@/hooks/useLinks";
@@ -166,47 +166,20 @@ export default function Page() {
       />
 
       {/* 메인 콘텐츠 영역 */}
-      <div className="w-full max-w-md flex flex-col gap-6 mt-4 px-4 relative z-10">
-        {authLoading ? (
-          // 인증 로딩 스피너
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-white" />
-            <p className="text-white/70 text-sm font-medium">사용자 정보를 확인하고 있습니다...</p>
-          </div>
-        ) : !user ? (
-          // 비로그인 웰컴 랜딩 카드
-          <Card className="w-full glass-card border-0 overflow-hidden shadow-2xl p-8 text-center flex flex-col items-center gap-6 mt-8">
-            <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center border border-white/30 shadow-inner">
-              <Link2 className="w-10 h-10 text-white animate-pulse" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-white mb-3">나만의 멀티 프로필 링크</h2>
-              <p className="text-white/85 text-sm leading-relaxed max-w-xs mx-auto">
-                SNS, 포트폴리오, 블로그 등 흩어져 있는 나만의 링크들을 하나의 매력적인 페이지로 모아보세요.
-              </p>
-            </div>
-            <div className="w-full border-t border-white/10 my-2" />
-            <div className="flex flex-col gap-3 w-full">
-              <p className="text-xs text-white/60 font-semibold leading-relaxed">
-                로그인 후 링크 에디터를 이용해 나만의 링크 페이지를 만들고 관리할 수 있습니다.
-              </p>
-              <Button
-                onClick={handleLogin}
-                disabled={isLoginPending}
-                className="w-full bg-white hover:bg-zinc-100 text-black font-bold py-6 rounded-xl shadow-lg border border-white flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-1.14 2.77-2.4 3.61v3h3.86c2.26-2.09 3.59-5.17 3.59-8.46z" />
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z" />
-                  <path fill="#FBBC05" d="M5.27 14.29a7.18 7.18 0 0 1 0-4.58V6.62H1.29a11.94 11.94 0 0 0 0 10.76l3.98-3.09z" />
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z" />
-                </svg>
-                <span>Google 계정으로 시작하기</span>
-              </Button>
-            </div>
-          </Card>
-        ) : (
-          // 로그인 완료된 사용자 프로필 및 링크 관리 UI
+      {authLoading ? (
+        // 인증 로딩 스피너
+        <div className="w-full max-w-md flex flex-col items-center justify-center py-20 gap-3 mt-4 px-4 relative z-10">
+          <Loader2 className="w-8 h-8 animate-spin text-white" />
+          <p className="text-white/70 text-sm font-medium">사용자 정보를 확인하고 있습니다...</p>
+        </div>
+      ) : !user ? (
+        // 비로그인 랜딩 (전체 너비 사용)
+        <div className="w-full relative z-10">
+          <LandingHero onLogin={handleLogin} isLoginPending={isLoginPending} />
+        </div>
+      ) : (
+        // 로그인 완료된 사용자 프로필 및 링크 관리 UI
+        <div className="w-full max-w-md flex flex-col gap-6 mt-4 px-4 relative z-10">
           <>
             {/* Share Button */}
             <div className="absolute top-0 right-0">
@@ -424,8 +397,8 @@ export default function Page() {
               )}
             </div>
           </>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* 삭제 확인 모달 */}
       <Dialog open={!!deleteTargetLink} onOpenChange={(open) => { if (!open) handleDeleteCancel(); }}>

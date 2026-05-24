@@ -1,6 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Link2, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = {
+  title: "페이지를 찾을 수 없습니다",
+  description:
+    "존재하지 않는 프로필이거나 잘못된 주소입니다. MyLink 홈으로 돌아가 새 프로필 링크를 만들어보세요.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function NotFound() {
   return (

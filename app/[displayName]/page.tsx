@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Camera, Code, Mail, Video, Link2 } from "lucide-react";
 import { getUserProfileByDisplayname } from "@/lib/firebase/user";
@@ -8,11 +9,47 @@ interface Props {
   params: Promise<{ displayName: string }>;
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { displayName } = await params;
+  const profile = await getUserProfileByDisplayname(displayName);
+
+  if (!profile) {
+    return {
+      title: "프로필을 찾을 수 없습니다",
+      description: "존재하지 않는 MyLink 프로필이거나 잘못된 주소입니다.",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const handle = profile.displayname;
+  const title = `@${handle}`;
+  const description =
+    profile.bio?.trim() ||
+    `${handle}님의 MyLink 프로필 — 모든 링크를 한 곳에서 확인하세요.`;
+  const canonical = `/${handle}`;
+
   return {
-    title: `@${displayName} · MyLink`,
-    description: `${displayName}의 MyLink 프로필 페이지`,
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: "profile",
+      url: canonical,
+      title: `@${handle} · MyLink`,
+      description,
+      siteName: "MyLink",
+      locale: "ko_KR",
+      username: handle,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `@${handle} · MyLink`,
+      description,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
   };
 }
 
