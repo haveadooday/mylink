@@ -1,0 +1,86 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ───────────── 공통 헬퍼 ─────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 변경 금지 필드(이뮤터블)가 그대로 유지되는지 확인
+    function isUnchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    // ───────────── users/{userId} : 프로필 문서 ─────────────
+    // 프로필은 별도 서브컬렉션이 아니라 users/{uid} 문서 자체에 저장됨
+    // (displayname, username, bio, email, photoURL, uid)
+    match /users/{userId} {
+
+      // 누구나 읽기 가능 (공개 프로필 페이지 + displayname 중복 체크 쿼리)
+      allow read: if true;
+
+      // 최초 가입: 본인만, uid 필드가 자기 자신과 일치해야 함
+      allow create: if isOwner(userId)
+                    && request.resource.data.uid == userId
+                    && request.resource.data.displayname is string
+                    && request.resource.data.displayname.size() <= 30
+                    && request.resource.data.bio is string
+                    && request.resource.data.bio.size() <= 200;
+
+      // 프로필 편집: 본인만, uid/email 등 핵심 필드는 변경 불가
+      allow update: if isOwner(userId)
+                    && isUnchanged('uid')
+                    && request.resource.data.displayname is string
+                    && request.resource.data.displayname.size() > 0
+                    && request.resource.data.displayname.size() <= 30
+                    && request.resource.data.bio is string
+                    && request.resource.data.bio.size() <= 200;
+
+      // 회원 탈퇴 등 본인 문서 삭제 (하위 links 서브컬렉션은
+      // 클라이언트 또는 Cloud Functions에서 별도로 정리 필요)
+      allow delete: if isOwner(userId);
+
+      // ───────────── users/{userId}/links/{linkId} ─────────────
+      match /links/{linkId} {
+
+        // 누구나 링크 읽기 가능 (공개 프로필 페이지에서 표시)
+        allow read: if true;
+
+        // 링크 작성: 본인만 + 입력 검증
+        allow create: if isOwner(userId)
+                      && request.resource.data.title is string
+                      && request.resource.data.title.size() > 0
+                      && request.resource.data.title.size() <= 100
+                      && request.resource.data.url is string
+                      && request.resource.data.url.size() > 0
+                      && request.resource.data.url.size() <= 2048
+                      && request.resource.data.createdAt == request.time;
+
+        // 링크 수정: 본인만 + createdAt 변경 불가
+        allow update: if isOwner(userId)
+                      && isUnchanged('createdAt')
+                      && request.resource.data.title is string
+                      && request.resource.data.title.size() > 0
+                      && request.resource.data.title.size() <= 100
+                      && request.resource.data.url is string
+                      && request.resource.data.url.size() > 0
+                      && request.resource.data.url.size() <= 2048
+                      && request.resource.data.updatedAt == request.time;
+
+        // 링크 삭제: 본인만
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // ───────────── 그 외 모든 경로 차단 ─────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
