@@ -2,13 +2,14 @@
  * OG 이미지에서 공통으로 사용하는 폰트 로더 / 디자인 토큰.
  * 폰트는 모듈 캐시에 저장해 동일 인스턴스 내 재호출 비용을 줄인다.
  *
- * Satori 는 WOFF2(Brotli) 디코딩을 지원하지 않으므로 TTF 를 받는다.
+ * Satori 는 WOFF2(Brotli) 디코딩을 지원하지 않아 OTF 를 받는다.
+ * (Pretendard 배포본은 TTF 가 아니라 OTF 로 배포된다.)
  */
 
 const PRETENDARD_BOLD =
-  "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-Bold.ttf";
+  "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-Bold.otf";
 const PRETENDARD_REGULAR =
-  "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-Regular.ttf";
+  "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-Regular.otf";
 
 let cachedFonts: { bold: ArrayBuffer; regular: ArrayBuffer } | null = null;
 
