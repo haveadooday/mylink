@@ -6,7 +6,6 @@ import {
   doc,
   query,
   orderBy,
-  onSnapshot,
   serverTimestamp,
   Timestamp,
   updateDoc,
@@ -37,38 +36,6 @@ export async function getLinks(userId: string): Promise<Link[]> {
     id: docSnap.id,
     ...(docSnap.data() as Omit<Link, "id">),
   }));
-}
-
-/**
- * Firestore의 특정 유저 링크 목록을 실시간으로 구독합니다 (createdAt 내림차순)
- * @returns 구독 해제 함수 (unsubscribe)
- */
-export function subscribeToLinks(
-  userId: string,
-  onUpdate: (links: Link[]) => void,
-  onError?: (error: Error) => void
-): () => void {
-  const q = query(
-    collection(db, getCollectionPath(userId)),
-    orderBy("createdAt", "desc")
-  );
-
-  const unsubscribe = onSnapshot(
-    q,
-    (snapshot) => {
-      const links = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...(docSnap.data() as Omit<Link, "id">),
-      }));
-      onUpdate(links);
-    },
-    (error) => {
-      console.error("Firestore 구독 오류:", error);
-      onError?.(error);
-    }
-  );
-
-  return unsubscribe;
 }
 
 /**

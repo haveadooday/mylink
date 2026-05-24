@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { User as FirebaseUser } from "firebase/auth";
 import { db } from "./config";
 
@@ -64,25 +64,51 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 }
 
 /**
- * Firestore의 유저 프로필 정보를 실시간으로 구독합니다.
+ * displayname으로 Firestore 유저 프로필을 검색합니다.
+ * 방문자 페이지(공개 URL)에서 사용합니다.
  */
-export function subscribeToUserProfile(
+export async function getUserProfileByDisplayname(
+  displayname: string
+): Promise<UserProfile | null> {
+  const usersRef = collection(db, "users");
+  const q = query(usersRef, where("displayname", "==", displayname));
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+  return snapshot.docs[0].data() as UserProfile;
+}
+
+/**
+ * 특정 displayname이 다른 유저에 의해 이미 사용 중인지 확인합니다.
+ * @param displayname 확인할 displayname
+ * @param currentUid 현재 로그인한 유저의 uid (본인 제외)
+ * @returns true면 이미 사용 중 (중복), false면 사용 가능
+ */
+export async function checkDisplaynameAvailable(
+  displayname: string,
+  currentUid: string
+): Promise<boolean> {
+  const usersRef = collection(db, "users");
+  const q = query(usersRef, where("displayname", "==", displayname));
+  const snapshot = await getDocs(q);
+  // 본인 계정을 제외한 다른 유저가 이 displayname을 사용 중인지 확인
+  const isDuplicated = snapshot.docs.some((d) => d.id !== currentUid);
+  return !isDuplicated;
+}
+
+export interface UpdateProfileData {
+  displayname?: string;
+  bio?: string;
+}
+
+/**
+ * 유저 프로필 정보를 부분 업데이트합니다.
+ * @param uid 업데이트할 유저의 uid
+ * @param data 업데이트할 필드 (displayname, bio)
+ */
+export async function updateUserProfile(
   uid: string,
-  onUpdate: (profile: UserProfile) => void,
-  onError?: (error: Error) => void
-): () => void {
+  data: UpdateProfileData
+): Promise<void> {
   const docRef = doc(db, "users", uid);
-  const unsubscribe = onSnapshot(
-    docRef,
-    (docSnap) => {
-      if (docSnap.exists()) {
-        onUpdate(docSnap.data() as UserProfile);
-      }
-    },
-    (error) => {
-      console.error("유저 프로필 구독 오류:", error);
-      onError?.(error);
-    }
-  );
-  return unsubscribe;
+  await setDoc(docRef, data, { merge: true });
 }
