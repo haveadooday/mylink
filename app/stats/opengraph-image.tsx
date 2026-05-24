@@ -89,6 +89,9 @@ export default async function Image() {
 
           <div
             style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
               fontSize: 28,
               color: "rgba(255,255,255,0.92)",
               marginTop: 28,
@@ -98,7 +101,8 @@ export default async function Image() {
               fontWeight: 400,
             }}
           >
-            어떤 링크가 사랑받고 있는지{"\n"}한눈에 확인해보세요
+            <div>어떤 링크가 사랑받고 있는지</div>
+            <div>한눈에 확인해보세요</div>
           </div>
         </div>
 

@@ -89,6 +89,9 @@ export default async function Image() {
 
           <div
             style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
               fontSize: 28,
               color: "rgba(255,255,255,0.92)",
               marginTop: 28,
@@ -98,7 +101,8 @@ export default async function Image() {
               fontWeight: 400,
             }}
           >
-            SNS, 포트폴리오, 블로그를{"\n"}하나의 매력적인 페이지로 모아보세요
+            <div>SNS, 포트폴리오, 블로그를</div>
+            <div>하나의 매력적인 페이지로 모아보세요</div>
           </div>
         </div>
 
