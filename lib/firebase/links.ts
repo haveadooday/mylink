@@ -41,6 +41,22 @@ export async function getLinks(userId: string): Promise<Link[]> {
 }
 
 /**
+ * Firestore에서 특정 유저의 링크 목록을 클릭수 내림차순으로 가져옵니다.
+ * 통계 페이지에서 사용합니다.
+ */
+export async function getLinksByClickCount(userId: string): Promise<Link[]> {
+  const q = query(
+    collection(db, getCollectionPath(userId)),
+    orderBy("clickCount", "desc")
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((docSnap) => ({
+    id: docSnap.id,
+    ...(docSnap.data() as Omit<Link, "id">),
+  }));
+}
+
+/**
  * Firestore에 특정 유저의 새로운 링크를 추가합니다
  */
 export async function addLink(

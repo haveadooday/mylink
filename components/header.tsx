@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { User } from "firebase/auth";
 import {
   LogOut,
@@ -10,6 +11,7 @@ import {
   Check,
   ExternalLink,
   BarChart2,
+  BarChart3,
   ChevronDown,
   UserPen,
   AlertCircle,
@@ -260,12 +262,15 @@ export default function Header({
       <header className="w-full max-w-4xl mx-auto px-4 py-3 sticky top-4 z-50">
         <div className="w-full h-16 rounded-2xl glass-card flex items-center justify-between px-6 border border-white/20 dark:border-white/10 shadow-lg">
           {/* 서비스 로고 */}
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
+          <Link
+            href="/"
+            className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity"
+          >
             <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center border border-white/30 shadow-inner">
               <Link2 className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-xl tracking-tight text-white">MyLink</span>
-          </div>
+          </Link>
 
           {/* 우측 로그인/로그아웃 버튼 */}
           <div className="flex items-center gap-3">
@@ -377,6 +382,17 @@ export default function Header({
                           </>
                         )}
                       </button>
+
+                      {/* 통계 페이지 */}
+                      <Link
+                        id="profile-stats-link"
+                        href="/stats"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-all text-sm font-medium group"
+                      >
+                        <BarChart3 className="w-4 h-4 text-white/50 group-hover:text-white/80 transition-colors" />
+                        내 링크 통계
+                      </Link>
 
                       {/* 프로필 수정 */}
                       <button
