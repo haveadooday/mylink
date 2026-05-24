@@ -55,6 +55,7 @@ export default function Page() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isLoginPending, setIsLoginPending] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -129,10 +130,15 @@ export default function Page() {
 
   // 로그인 및 로그아웃 핸들러
   const handleLogin = async () => {
+    // 팝업이 이미 열려있는 경우 중복 요청 방지
+    if (isLoginPending) return;
+    setIsLoginPending(true);
     try {
       await signInWithGoogle();
     } catch (error) {
       console.error("로그인 중 오류 발생:", error);
+    } finally {
+      setIsLoginPending(false);
     }
   };
 
@@ -300,6 +306,8 @@ export default function Page() {
         onLogin={handleLogin}
         onLogout={handleLogout}
         isLoading={authLoading}
+        isLoginPending={isLoginPending}
+        linkCount={links.length}
       />
 
       {/* 메인 콘텐츠 영역 */}
@@ -331,7 +339,8 @@ export default function Page() {
               </p>
               <Button
                 onClick={handleLogin}
-                className="w-full bg-white hover:bg-zinc-100 text-black font-bold py-6 rounded-xl shadow-lg border border-white flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                disabled={isLoginPending}
+                className="w-full bg-white hover:bg-zinc-100 text-black font-bold py-6 rounded-xl shadow-lg border border-white flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
