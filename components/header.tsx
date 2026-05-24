@@ -266,9 +266,9 @@ export default function Header({
             href="/"
             className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity"
           >
-            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center border border-white/30 shadow-inner">
+            <span className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center border border-white/30 shadow-inner">
               <Link2 className="w-5 h-5 text-white" />
-            </div>
+            </span>
             <span className="font-bold text-xl tracking-tight text-white">MyLink</span>
           </Link>
 
