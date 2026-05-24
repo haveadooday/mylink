@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { Camera, Code, Mail, Video, Link2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { getUserProfileByDisplayname } from "@/lib/firebase/user";
 import { getLinks } from "@/lib/firebase/links";
+import PublicLinkCard from "./_components/PublicLinkCard";
 
 interface Props {
   params: Promise<{ displayName: string }>;
@@ -109,41 +109,15 @@ export default async function PublicProfilePage({ params }: Props) {
               아직 등록된 링크가 없습니다.
             </p>
           ) : (
-            visibleLinks.map((link) => {
-              let domain = "google.com";
-              try {
-                domain = new URL(link.url).hostname;
-              } catch {
-                // invalid URL
-              }
-              const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-
-              return (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full"
-                >
-                  <Card className="w-full glass-card hover:-translate-y-0.5 hover:bg-white/20 border-0 transition-all duration-300 cursor-pointer overflow-hidden">
-                    <CardContent className="flex items-center gap-4 p-4">
-                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={faviconUrl}
-                          alt={`${link.title} icon`}
-                          className="w-6 h-6 object-contain"
-                        />
-                      </div>
-                      <span className="font-semibold text-lg text-white truncate flex-1">
-                        {link.title}
-                      </span>
-                    </CardContent>
-                  </Card>
-                </a>
-              );
-            })
+            visibleLinks.map((link) => (
+              <PublicLinkCard
+                key={link.id}
+                ownerUid={profile.uid}
+                linkId={link.id}
+                title={link.title}
+                url={link.url}
+              />
+            ))
           )}
         </div>
 

@@ -63,15 +63,22 @@ service cloud.firestore {
                       && request.resource.data.createdAt == request.time;
 
         // 링크 수정: 본인만 + createdAt 변경 불가
-        allow update: if isOwner(userId)
-                      && isUnchanged('createdAt')
-                      && request.resource.data.title is string
-                      && request.resource.data.title.size() > 0
-                      && request.resource.data.title.size() <= 100
-                      && request.resource.data.url is string
-                      && request.resource.data.url.size() > 0
-                      && request.resource.data.url.size() <= 2048
-                      && request.resource.data.updatedAt == request.time;
+        // 또는 누구나 clickCount 만 +1 증가 가능 (공개 프로필 클릭 추적)
+        allow update: if (
+                        isOwner(userId)
+                        && isUnchanged('createdAt')
+                        && request.resource.data.title is string
+                        && request.resource.data.title.size() > 0
+                        && request.resource.data.title.size() <= 100
+                        && request.resource.data.url is string
+                        && request.resource.data.url.size() > 0
+                        && request.resource.data.url.size() <= 2048
+                        && request.resource.data.updatedAt == request.time
+                      ) || (
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clickCount'])
+                        && request.resource.data.clickCount is int
+                        && request.resource.data.clickCount == resource.data.get('clickCount', 0) + 1
+                      );
 
         // 링크 삭제: 본인만
         allow delete: if isOwner(userId);

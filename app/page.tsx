@@ -19,6 +19,7 @@ import {
   X,
   Check,
   Link2,
+  MousePointerClick,
 } from "lucide-react";
 import {
   Dialog,
@@ -391,7 +392,11 @@ export default function Page() {
                                 </div>
                                 <span className="font-semibold text-lg text-white truncate">{link.title}</span>
                               </div>
-                              <div className="flex items-center gap-1.5 shrink-0 z-20">
+                              <div className="flex items-center gap-2 shrink-0 z-20">
+                                <span className="flex items-center gap-1 text-white/70 text-sm font-medium">
+                                  <MousePointerClick className="w-4 h-4" />
+                                  {link.clickCount ?? 0}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEditStart(link); }}

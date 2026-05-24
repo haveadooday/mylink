@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   Timestamp,
   updateDoc,
+  increment,
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -16,6 +17,7 @@ export interface Link {
   id: string;
   title: string;
   url: string;
+  clickCount?: number;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
 }
@@ -75,5 +77,17 @@ export async function updateLink(
  */
 export async function deleteLink(userId: string, linkId: string): Promise<void> {
   await deleteDoc(doc(db, getCollectionPath(userId), linkId));
+}
+
+/**
+ * 공개 프로필 페이지에서 링크가 클릭될 때 clickCount를 1 증가시킵니다.
+ * 로그인 여부와 관계없이 누구나 호출할 수 있도록 Firestore 규칙에서 허용되어야 합니다.
+ */
+export async function incrementLinkClick(
+  userId: string,
+  linkId: string
+): Promise<void> {
+  const docRef = doc(db, getCollectionPath(userId), linkId);
+  await updateDoc(docRef, { clickCount: increment(1) });
 }
 
