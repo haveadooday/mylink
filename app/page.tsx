@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { dummyLinks } from "@/data/links";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, Code, Camera, Video, Mail, Share2, Plus } from "lucide-react";
+import { User, Code, Camera, Video, Mail, Share2, Plus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { getLinks, addLink, type Link } from "@/lib/firebase/links";
 
 const linkFormSchema = z.object({
   title: z
@@ -45,8 +45,26 @@ const linkFormSchema = z.object({
 type LinkFormValues = z.infer<typeof linkFormSchema>;
 
 export default function Page() {
-  const [links, setLinks] = useState(dummyLinks);
+  const [links, setLinks] = useState<Link[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  // 페이지 로드 시 Firestore에서 링크 목록 불러오기
+  useEffect(() => {
+    const fetchLinks = async () => {
+      try {
+        const data = await getLinks();
+        setLinks(data);
+      } catch (error) {
+        console.error("링크를 불러오는 중 오류가 발생했습니다:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchLinks();
+  }, []);
 
   const {
     register,
@@ -61,21 +79,38 @@ export default function Page() {
     },
   });
 
-  const onSubmit = (data: LinkFormValues) => {
+  const onSubmit = async (data: LinkFormValues) => {
     let finalUrl = data.url.trim();
     if (!/^https?:\/\//i.test(finalUrl)) {
       finalUrl = `https://${finalUrl}`;
     }
 
-    const newLink = {
-      id: Date.now().toString(),
-      title: data.title.trim(),
-      url: finalUrl,
-    };
+    setIsSubmitting(true);
+    try {
+      // Firestore에 저장 (users/anonymous/links)
+      await addLink({
+        title: data.title.trim(),
+        url: finalUrl,
+      });
+      reset();
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error("링크 추가 중 오류가 발생했습니다:", error);
+      return;
+    } finally {
+      setIsSubmitting(false);
+    }
 
-    setLinks([newLink, ...links]);
-    reset();
-    setIsAddDialogOpen(false);
+    // 저장 완료 후 목록 갱신 (로딩 표시)
+    setIsRefreshing(true);
+    try {
+      const data = await getLinks();
+      setLinks(data);
+    } catch (error) {
+      console.error("목록 갱신 중 오류가 발생했습니다:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -182,9 +217,17 @@ export default function Page() {
                   </Button>
                   <Button 
                     type="submit"
+                    disabled={isSubmitting}
                     className="bg-white text-black hover:bg-zinc-200"
                   >
-                    추가하기
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        저장 중...
+                      </>
+                    ) : (
+                      "추가하기"
+                    )}
                   </Button>
                 </DialogFooter>
               </form>
@@ -194,37 +237,57 @@ export default function Page() {
 
         {/* Links List */}
         <div className="flex flex-col gap-4 mt-2">
-          {links.map((link) => {
-            let domain = "google.com";
-            try {
-              domain = new URL(link.url).hostname;
-            } catch (e) {
-              // Handle invalid URLs smoothly
-            }
-            const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-            
-            return (
-              <a
-                key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full"
-              >
-                <Card className="w-full glass-card hover:-translate-y-1 hover:bg-white/20 border-0 transition-all duration-300 cursor-pointer overflow-hidden group">
-                  <CardContent className="flex items-center p-4 relative">
-                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 overflow-hidden mr-4">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={faviconUrl} alt={`${link.title} icon`} className="w-6 h-6 object-contain" />
-                    </div>
-                    <span className="font-semibold text-lg text-white group-hover:scale-105 transition-transform duration-300">
-                      {link.title}
-                    </span>
-                  </CardContent>
-                </Card>
-              </a>
-            );
-          })}
+          {isLoading ? (
+            // 초기 로딩 스켈레톤
+            Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-full h-[66px] rounded-xl glass-card animate-pulse bg-white/10"
+              />
+            ))
+          ) : isRefreshing ? (
+            // 갱신 중 로딩 표시
+            <div className="flex flex-col items-center justify-center py-8 gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-white/60" />
+              <p className="text-white/50 text-sm">목록을 갱신하는 중...</p>
+            </div>
+          ) : links.length === 0 ? (
+            <p className="text-center text-white/50 text-sm py-8">
+              아직 링크가 없습니다. 첫 번째 링크를 추가해보세요!
+            </p>
+          ) : (
+            links.map((link) => {
+              let domain = "google.com";
+              try {
+                domain = new URL(link.url).hostname;
+              } catch (e) {
+                // Handle invalid URLs smoothly
+              }
+              const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+              
+              return (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full"
+                >
+                  <Card className="w-full glass-card hover:-translate-y-1 hover:bg-white/20 border-0 transition-all duration-300 cursor-pointer overflow-hidden group">
+                    <CardContent className="flex items-center p-4 relative">
+                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 overflow-hidden mr-4">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={faviconUrl} alt={`${link.title} icon`} className="w-6 h-6 object-contain" />
+                      </div>
+                      <span className="font-semibold text-lg text-white group-hover:scale-105 transition-transform duration-300">
+                        {link.title}
+                      </span>
+                    </CardContent>
+                  </Card>
+                </a>
+              );
+            })
+          )}
         </div>
       </div>
     </div>
