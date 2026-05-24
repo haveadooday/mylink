@@ -94,18 +94,6 @@ npm run dev
 | `npm run format` | Prettier로 `ts`/`tsx` 포맷팅 |
 | `npm run typecheck` | TypeScript 타입 체크 (`tsc --noEmit`) |
 
-## 🗺 로드맵
-
-- [x] 구글 로그인 및 프로필 설정
-- [x] 링크 CRUD + 인라인 편집
-- [x] 자동 파비콘 연동
-- [x] 클릭 수 기록 및 통계 페이지
-- [x] 공개 프로필 페이지 + SEO/OG 이미지
-- [ ] 드래그 앤 드롭 정렬
-- [ ] YouTube 임베드 / 텍스트 블록 등 확장 블록
-- [ ] 소셜 아이콘 퀵 링크 커스터마이징
-- [ ] 방문자 수(조회수) 통계
-
 ## 📄 더 자세히
 
 자세한 기획 배경과 설계는 [docs/](docs/) 폴더에서 확인할 수 있습니다.
