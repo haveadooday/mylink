@@ -21,15 +21,15 @@ export interface Link {
   updatedAt?: Timestamp;
 }
 
-// Firestore 경로: users/anonymous/links
-const LINKS_COLLECTION = "users/anonymous/links";
+// Firestore 경로 생성 헬퍼 함수
+const getCollectionPath = (userId: string) => `users/${userId}/links`;
 
 /**
- * Firestore에서 링크 목록을 가져옵니다 (생성 날짜 내림차순)
+ * Firestore에서 특정 유저의 링크 목록을 가져옵니다 (생성 날짜 내림차순)
  */
-export async function getLinks(): Promise<Link[]> {
+export async function getLinks(userId: string): Promise<Link[]> {
   const q = query(
-    collection(db, LINKS_COLLECTION),
+    collection(db, getCollectionPath(userId)),
     orderBy("createdAt", "desc")
   );
   const snapshot = await getDocs(q);
@@ -40,15 +40,16 @@ export async function getLinks(): Promise<Link[]> {
 }
 
 /**
- * Firestore 링크 목록을 실시간으로 구독합니다 (createdAt 내림차순)
+ * Firestore의 특정 유저 링크 목록을 실시간으로 구독합니다 (createdAt 내림차순)
  * @returns 구독 해제 함수 (unsubscribe)
  */
 export function subscribeToLinks(
+  userId: string,
   onUpdate: (links: Link[]) => void,
   onError?: (error: Error) => void
 ): () => void {
   const q = query(
-    collection(db, LINKS_COLLECTION),
+    collection(db, getCollectionPath(userId)),
     orderBy("createdAt", "desc")
   );
 
@@ -71,12 +72,13 @@ export function subscribeToLinks(
 }
 
 /**
- * Firestore에 새로운 링크를 추가합니다
+ * Firestore에 특정 유저의 새로운 링크를 추가합니다
  */
 export async function addLink(
+  userId: string,
   link: Omit<Link, "id" | "createdAt" | "updatedAt">
 ): Promise<Link> {
-  const docRef = await addDoc(collection(db, LINKS_COLLECTION), {
+  const docRef = await addDoc(collection(db, getCollectionPath(userId)), {
     ...link,
     createdAt: serverTimestamp(),
   });
@@ -87,13 +89,14 @@ export async function addLink(
 }
 
 /**
- * Firestore에서 링크를 수정합니다
+ * Firestore에서 특정 유저의 링크를 수정합니다
  */
 export async function updateLink(
+  userId: string,
   linkId: string,
   link: Partial<Omit<Link, "id" | "createdAt" | "updatedAt">>
 ): Promise<void> {
-  const docRef = doc(db, LINKS_COLLECTION, linkId);
+  const docRef = doc(db, getCollectionPath(userId), linkId);
   await updateDoc(docRef, {
     ...link,
     updatedAt: serverTimestamp(),
@@ -101,9 +104,9 @@ export async function updateLink(
 }
 
 /**
- * Firestore에서 링크를 삭제합니다
+ * Firestore에서 특정 유저의 링크를 삭제합니다
  */
-export async function deleteLink(linkId: string): Promise<void> {
-  await deleteDoc(doc(db, LINKS_COLLECTION, linkId));
+export async function deleteLink(userId: string, linkId: string): Promise<void> {
+  await deleteDoc(doc(db, getCollectionPath(userId), linkId));
 }
 
