@@ -325,10 +325,7 @@ export default function Page() {
                     className="bg-white text-black hover:bg-zinc-200"
                   >
                     {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        저장 중...
-                      </>
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       "추가하기"
                     )}

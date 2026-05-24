@@ -18,6 +18,7 @@ export interface Link {
   title: string;
   url: string;
   createdAt?: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 // Firestore 경로: users/anonymous/links
@@ -73,7 +74,7 @@ export function subscribeToLinks(
  * Firestore에 새로운 링크를 추가합니다
  */
 export async function addLink(
-  link: Omit<Link, "id" | "createdAt">
+  link: Omit<Link, "id" | "createdAt" | "updatedAt">
 ): Promise<Link> {
   const docRef = await addDoc(collection(db, LINKS_COLLECTION), {
     ...link,
@@ -90,10 +91,13 @@ export async function addLink(
  */
 export async function updateLink(
   linkId: string,
-  link: Partial<Omit<Link, "id" | "createdAt">>
+  link: Partial<Omit<Link, "id" | "createdAt" | "updatedAt">>
 ): Promise<void> {
   const docRef = doc(db, LINKS_COLLECTION, linkId);
-  await updateDoc(docRef, link);
+  await updateDoc(docRef, {
+    ...link,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 /**
